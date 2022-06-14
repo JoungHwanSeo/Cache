@@ -3,6 +3,8 @@
  * Lab 4: Cache Simulation
  */
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <cstdio>
 #include <iostream>
 #include <fstream>
@@ -47,7 +49,7 @@ int main(int argc, char** argv) {
   //argv[3]이 associativity argv[4]가 line(block) size
   //argv[2]가 cache size
 
-  num_sets = (atoi(argv[2]) / atoi(argv[3])) / atoi(argv[4]);
+  int num_sets = (atoi(argv[2]) / atoi(argv[3])) / atoi(argv[4]);
   //전체 cache size = block size * associativity * num_set 이므로
 
   cache_c* cc = new cache_c("L1", num_sets, atoi(argv[3]), atoi(argv[4]));

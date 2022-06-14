@@ -21,7 +21,7 @@ public:
   bool   m_dirty;    // dirty bit 
   addr_t m_tag;      // tag for the line
 
-  int order; // 
+  int order; // 최근에 사용되었을수록 작은 숫자... 처음엔 모두 0으로 초기화
 
   friend class cache_c;
 };
@@ -38,7 +38,7 @@ public:
     int m_assoc;             // number of cache blocks in a cache set
     // TODO: maintain the LRU stack for this set
 
-    int MRU;  //몇번째 way가 MRU인지
+    int MRU_num; // 해당 set에서 MRU의 num
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -55,6 +55,8 @@ private:
   int m_num_sets;         // number of sets
   int m_line_size;        // cache line size
 
+  int c_assoc;            //몇 way인가... 개인적 추가
+
   cache_set_c **m_set;    // cache data structure
 
   // cache statistics
@@ -65,10 +67,8 @@ private:
   int m_num_writes;
   int m_num_writebacks;
 
-  //개인적으로 추가함
-  int block_bit;
-  int idx_bit;
-  int tag_bit;
 };
 
 #endif // !__CACHE_H__ 
+
+
