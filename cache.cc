@@ -84,6 +84,7 @@ void cache_c::access(addr_t address, int access_type) {
     int tag = address / (m_num_sets * m_line_size);
     /// /////////////////////////////////////////////////////////////////
     
+    //printf("idx : %x\ntag : %x\n\n", idx, tag);
 
     cache_entry_c entry;
 
@@ -109,11 +110,11 @@ void cache_c::access(addr_t address, int access_type) {
         for (int i = 0; i < c_assoc; i++) {
             //각 idx에 대응하는 set에서 asso훑음
             entry = m_set[idx]->m_entry[i];
-            if (entry.m_valid && entry.m_tag == tag) {
+            if (m_set[idx]->m_entry[i].m_valid == true && m_set[idx]->m_entry[i].m_tag == tag) {
                 m_num_hits++;
                 hit = true;
 
-                entry.order = m_set[idx]->MRU_num; //감소된 MRU_num이 들어감
+                m_set[idx]->m_entry[i].order = m_set[idx]->MRU_num; //감소된 MRU_num이 들어감
                 //order가 가장 작은게 MRU...
                 //order가 가장 큰데 LRU
 
@@ -132,10 +133,10 @@ void cache_c::access(addr_t address, int access_type) {
                 entry = m_set[idx]->m_entry[i];
                 if (entry.m_valid == false) {
                     //invalid존재시 이걸 최우선적으로 채움
-                    entry.m_dirty = false; //read이므로 dirty = 0
-                    entry.m_valid = true; //데이터 가져왔으므로 true
-                    entry.m_tag = tag;
-                    entry.order = m_set[idx]->MRU_num;
+                    m_set[idx]->m_entry[i].m_dirty = false; //read이므로 dirty = 0
+                    m_set[idx]->m_entry[i].m_valid = true; //데이터 가져왔으므로 true
+                    m_set[idx]->m_entry[i].m_tag = tag;
+                    m_set[idx]->m_entry[i].order = m_set[idx]->MRU_num;
 
                     invalid_exist = true; 
                     break;
@@ -165,12 +166,12 @@ void cache_c::access(addr_t address, int access_type) {
                 }
                 //만약 evict가 dirty 아니면 write back 필요 
                 //entry = m_set[idx]->m_entry[LRU_idx];
-                entry.m_dirty = false;
-                entry.m_valid = true;
-                entry.m_tag = tag; //새로운 tag로 바꿔줌
+                m_set[idx]->m_entry[LRU_idx].m_dirty = false;
+                m_set[idx]->m_entry[LRU_idx].m_valid = true;
+                m_set[idx]->m_entry[LRU_idx].m_tag = tag; //새로운 tag로 바꿔줌
 
                 //맨 처음에 감소된 MRU_num.. 이게 제일 작음 (MRU가됨)
-                entry.order = m_set[idx]->MRU_num;
+                m_set[idx]->m_entry[LRU_idx].order = m_set[idx]->MRU_num;
 
             }
 
@@ -189,8 +190,8 @@ void cache_c::access(addr_t address, int access_type) {
             if (entry.m_valid && entry.m_tag == tag) {
                 //만약에 write hit이면 원래 있던 주소에 덮어씀.. WB고려 x
                 m_num_hits++;
-                entry.m_dirty = true; 
-                entry.order = set_MRU_num; // 해당 entry를 MRU로 만들어줌
+                m_set[idx]->m_entry[i].m_dirty = true;
+                m_set[idx]->m_entry[i].order = set_MRU_num; // 해당 entry를 MRU로 만들어줌
                 hit = true;
                 break;
             }
@@ -204,10 +205,10 @@ void cache_c::access(addr_t address, int access_type) {
                 entry = m_set[idx]->m_entry[i];
                 if (entry.m_valid == false) {
                     //invalid발견시 최우선적으로 채움
-                    entry.m_dirty = true;
-                    entry.m_tag = tag;
-                    entry.m_valid = true;
-                    entry.order = set_MRU_num;
+                    m_set[idx]->m_entry[i].m_dirty = true;
+                    m_set[idx]->m_entry[i].m_tag = tag;
+                    m_set[idx]->m_entry[i].m_valid = true;
+                    m_set[idx]->m_entry[i].order = set_MRU_num;
 
                     invalid_exist = true;
 
@@ -233,10 +234,10 @@ void cache_c::access(addr_t address, int access_type) {
                 if (m_set[idx]->m_entry[LRU_idx].m_dirty == true) {
                     m_num_writebacks++;
                 }
-                entry.m_dirty = true;
-                entry.m_tag = tag;
-                entry.m_valid = true;
-                entry.order = set_MRU_num;
+                m_set[idx]->m_entry[LRU_idx].m_dirty = true;
+                m_set[idx]->m_entry[LRU_idx].m_tag = tag;
+                m_set[idx]->m_entry[LRU_idx].m_valid = true;
+                m_set[idx]->m_entry[LRU_idx].order = set_MRU_num;
             }
         }
         break;
@@ -247,15 +248,14 @@ void cache_c::access(addr_t address, int access_type) {
         //해당 set의 MRU number감소
         m_set[idx]->MRU_num--;
 
-        m_num_reads++; //일단 read이므로 +1
         for (int i = 0; i < c_assoc; i++) {
             //각 idx에 대응하는 set에서 asso훑음
             entry = m_set[idx]->m_entry[i];
-            if (entry.m_valid && entry.m_tag == tag) {
+            if (m_set[idx]->m_entry[i].m_valid == true && m_set[idx]->m_entry[i].m_tag == tag) {
                 m_num_hits++;
                 hit = true;
 
-                entry.order = m_set[idx]->MRU_num; //감소된 MRU_num이 들어감
+                m_set[idx]->m_entry[i].order = m_set[idx]->MRU_num; //감소된 MRU_num이 들어감
                 //order가 가장 작은게 MRU...
                 //order가 가장 큰데 LRU
 
@@ -274,10 +274,10 @@ void cache_c::access(addr_t address, int access_type) {
                 entry = m_set[idx]->m_entry[i];
                 if (entry.m_valid == false) {
                     //invalid존재시 이걸 최우선적으로 채움
-                    entry.m_dirty = false; //read이므로 dirty = 0
-                    entry.m_valid = true; //데이터 가져왔으므로 true
-                    entry.m_tag = tag;
-                    entry.order = m_set[idx]->MRU_num;
+                    m_set[idx]->m_entry[i].m_dirty = false; //read이므로 dirty = 0
+                    m_set[idx]->m_entry[i].m_valid = true; //데이터 가져왔으므로 true
+                    m_set[idx]->m_entry[i].m_tag = tag;
+                    m_set[idx]->m_entry[i].order = m_set[idx]->MRU_num;
 
                     invalid_exist = true;
                     break;
@@ -307,17 +307,16 @@ void cache_c::access(addr_t address, int access_type) {
                 }
                 //만약 evict가 dirty 아니면 write back 필요 
                 //entry = m_set[idx]->m_entry[LRU_idx];
-                entry.m_dirty = false;
-                entry.m_valid = true;
-                entry.m_tag = tag; //새로운 tag로 바꿔줌
+                m_set[idx]->m_entry[LRU_idx].m_dirty = false;
+                m_set[idx]->m_entry[LRU_idx].m_valid = true;
+                m_set[idx]->m_entry[LRU_idx].m_tag = tag; //새로운 tag로 바꿔줌
 
                 //맨 처음에 감소된 MRU_num.. 이게 제일 작음 (MRU가됨)
-                entry.order = m_set[idx]->MRU_num;
+                m_set[idx]->m_entry[LRU_idx].order = m_set[idx]->MRU_num;
 
             }
 
         }
-
         break;
     }
   ////////////////////////////////////////////////////////////////////
@@ -335,5 +334,8 @@ void cache_c::print_stats() {
   std::cout << "number of misses: "      << m_num_misses << "\n";
   std::cout << "number of writes: "      << m_num_writes << "\n";
   std::cout << "number of writebacks: "  << m_num_writebacks << "\n";
+  ///개인적 추가... 지우기!!!
+  std::cout << "number of reads: " << m_num_reads << "\n";
+
 }
 

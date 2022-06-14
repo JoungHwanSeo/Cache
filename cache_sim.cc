@@ -23,10 +23,17 @@ void process_trace(cache_c* cache, const char* name) {
   int type;
   addr_t address;
 
+  int i = 0;  ///지우기
+
   if (trace_file.is_open()) {
     while (std::getline(trace_file, line)) {
       std::sscanf(line.c_str(), "%d %llx", &type, &address);
+     // printf("address : %x  Access type : %d\n", address, type);
       cache->access(address, type);
+      
+      //i++;  //지우기
+      //if (i == 20)
+      //    break;
     }
   }
 }
@@ -45,7 +52,7 @@ int main(int argc, char** argv) {
   /////////////////////////////////////////////////////////////////////////////
   
   //int num_sets = 256;  // example: 256 sets
-
+  
   //argv[3]이 associativity argv[4]가 line(block) size
   //argv[2]가 cache size
 
@@ -53,7 +60,7 @@ int main(int argc, char** argv) {
   //전체 cache size = block size * associativity * num_set 이므로
 
   cache_c* cc = new cache_c("L1", num_sets, atoi(argv[3]), atoi(argv[4]));
-
+  printf("num_sets : %d\n", num_sets);
   /////////////////////////////////////////////////////////////////////////////
 
   process_trace(cc, argv[1]);
